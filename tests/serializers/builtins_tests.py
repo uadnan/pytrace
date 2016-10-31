@@ -1,4 +1,4 @@
-from pytrace.serializers import builtins, ObjectSerializer
+from pytrace.serializers import builtins
 from pytrace.conf import settings
 
 from . import SerializerTestCase
@@ -67,9 +67,8 @@ class MethodSerializerTests(SerializerTestCase):
     def test_serialization(self):
         encoded_value = self.serialize(self.test_serialization)
         self.assertIn('class', encoded_value)
-
         owner_class_id = encoded_value['class']
-        owner_class = ObjectSerializer().get_object_by_id(owner_class_id)
+        owner_class = self.parent_serializer.get_object_by_id(owner_class_id)
         self.assertContains(owner_class, 'name', 'module')
         self.assertEqual(owner_class['name'], type(self).__name__)
         self.assertEqual(owner_class['module'], type(self).__module__)

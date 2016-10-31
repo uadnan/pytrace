@@ -6,7 +6,7 @@ import os.path
 import importlib
 import pkgutil
 
-from .base import ObjectSerializer
+from .base import ObjectSerializer  # NOQA
 
 CURRENT_DIR = os.path.dirname(__file__)
 
@@ -14,7 +14,3 @@ CURRENT_DIR = os.path.dirname(__file__)
 # serializer got chance to register itself before anything else
 for (_, name, _) in pkgutil.iter_modules([CURRENT_DIR]):
     importlib.import_module('.' + name, __package__)
-
-
-def serialize(value):
-    return ObjectSerializer().encode(value)

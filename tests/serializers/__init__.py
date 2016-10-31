@@ -1,5 +1,4 @@
 import unittest2
-
 from pytrace.serializers import ObjectSerializer
 
 
@@ -9,7 +8,8 @@ class SerializerTestCase(unittest2.TestCase):
 
     def setUp(self):
         self.serializer = self.serializer_class()
-        ObjectSerializer().reset()
+        self.parent_serializer = ObjectSerializer()
+        self.serializer.parent = self.parent_serializer
 
     def assertContains(self, container, *items):
         for item in items:

@@ -31,12 +31,12 @@ class FallbackSerializer(AbstractSerializer):
             return self.encode_exception(value)
 
         if BuiltinBase in mro:
-            return BuiltinFunctionSerializer().encode(value)
+            return BuiltinFunctionSerializer(parent=self.parent).encode(value)
 
         if isinstance(value, type):
-            return ClassSerializer().encode(value)
+            return ClassSerializer(parent=self.parent).encode(value)
 
         if is_class_instance(value):
-            return InstanceSerializer().encode(value)
+            return InstanceSerializer(parent=self.parent).encode(value)
 
         return repr(value)

@@ -32,7 +32,7 @@ class ManagedDebuggerTests(unittest2.TestCase):
         debugger.run("print 'Hello Wolrd")
         assert len(self.debugger_events) == 1
         assert self.debugger_events[0][0] == DebuggerEvent.SyntaxError
-        assert isinstance(self.debugger_events[0][1][0], SyntaxError)
+        assert isinstance(self.debugger_events[0][2]["exception"], SyntaxError)
 
     def test_step_line(self):
         self.debugger_events = []

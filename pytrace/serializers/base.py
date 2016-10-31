@@ -5,7 +5,6 @@ import six
 from pytrace.core.exceptions import NoSerializerFoundError, SerializationError
 from pytrace.core.heap import Heap
 
-from pytrace.utils.functional import Singleton
 
 from .utils import get_object_name
 from .registry import default as serializers_registry
@@ -15,6 +14,12 @@ class AbstractSerializer(object):
     """
     Base class for all serializers
     """
+
+    def __init__(self, parent=None):
+        if parent:
+            assert isinstance(parent, ObjectSerializer)
+
+        self.parent = parent
 
     def encode_type(self, type_):
         return {
@@ -30,14 +35,14 @@ class AbstractSerializer(object):
         }
 
     def serialize_inner(self, value):
-        return ObjectSerializer().encode(value)
+        assert self.parent, "serialize_inner cannot be called from outside context"
+        return self.parent.encode(value)
 
     @abstractmethod
     def encode(self, obj):
         pass
 
 
-@six.add_metaclass(Singleton)
 class ObjectSerializer(object):
 
     def __init__(self):
@@ -57,8 +62,9 @@ class ObjectSerializer(object):
     def _cached_encoded_value(self, original):
         return self._buffer.get(id(original), None)
 
-    def encode_using(self, value, serializer):
+    def encode_using(self, value, serializer_class):
         try:
+            serializer = serializer_class(parent=self)
             encoded_value = serializer.serialize(value)
             self._cache(value, encoded_value)
             return encoded_value
@@ -66,7 +72,7 @@ class ObjectSerializer(object):
             raise
         except Exception as ex:
             _, _, tb = sys.exc_info()
-            six.reraise(SerializationError, (serializer, value, ex), tb)
+            six.reraise(SerializationError, (serializer_class, value, ex), tb)
 
     def encode(self, value):
         value_type = type(value)

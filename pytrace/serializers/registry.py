@@ -1,4 +1,3 @@
-from pytrace.utils.functional import SimpleLazyObject
 
 
 class SerializerRegistry(object):
@@ -36,8 +35,7 @@ class SerializerRegistry(object):
         all given types
         """
         def register_handler(cls):
-            lazy = SimpleLazyObject(cls)
-            self.register_many(types, lazy)
+            self.register_many(types, cls)
             return cls
 
         return register_handler
@@ -47,7 +45,7 @@ class SerializerRegistry(object):
         Decorate to register default serializer. Class will be lazy initialized
         and only instance will be for all given types
         """
-        self._default = SimpleLazyObject(cls)
+        self._default = cls
         return cls
 
     def get(self, type_, fallback=None):

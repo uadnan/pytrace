@@ -1,4 +1,4 @@
-from pytrace.serializers import collections, ObjectSerializer
+from pytrace.serializers import collections
 
 from . import SerializerTestCase
 
@@ -30,7 +30,7 @@ class CollectionSerializerTests(SerializerTestCase):
         lst.append(lst)
 
         encoded_value = self.serialize([lst])
-        inner_list = ObjectSerializer().get_object_by_id(encoded_value[0])
+        inner_list = self.parent_serializer.get_object_by_id(encoded_value[0])
         self.assertEqual(inner_list['value'][1], "[...]")
 
 
