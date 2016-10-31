@@ -7,6 +7,7 @@ from pytrace.core.heap import Heap
 
 from pytrace.utils.functional import Singleton
 
+from .utils import get_object_name
 from .registry import default as serializers_registry
 
 
@@ -14,13 +15,6 @@ class AbstractSerializer(object):
     """
     Base class for all serializers
     """
-
-    def get_object_name(self, obj):
-        """ Get friendly name of object """
-        if hasattr(obj, '__name__'):
-            return obj.__name__
-
-        return self.get_object_name(type(obj))
 
     def encode_type(self, type_):
         return {
@@ -30,7 +24,7 @@ class AbstractSerializer(object):
 
     def serialize(self, obj):
         return {
-            'name': self.get_object_name(obj),
+            'name': get_object_name(obj),
             'type': self.encode_type(type(obj)),
             'value': self.encode(obj)
         }

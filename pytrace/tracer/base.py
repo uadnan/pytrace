@@ -3,7 +3,10 @@ from collections import OrderedDict
 from pytrace.conf import settings
 from pytrace.core.debugger import ManagedDebugger, DebuggerEvent
 from pytrace.serializers import ObjectSerializer
-from pytrace.tracer import utils
+from pytrace.serializers.utils import get_object_name
+
+from . import utils
+from .signals import SIGNALS
 
 
 class AbstractTraceRecorder(object):
@@ -34,9 +37,26 @@ class AbstractTraceRecorder(object):
             traceback = kwargs.get('traceback', None)
             kwargs['top_frame'] = self._walk_frame(event, frame, traceback)
 
-        event_data = {}  # base_trigger(event, *args, **kwargs)
+        event_data = self._trigger_signal(event, **kwargs)
         self._encode_frame(event, event_data, kwargs.get('top_frame', None))
         return event_data
+
+    @staticmethod
+    def _trigger_signal(event, **kwargs):
+        signal = SIGNALS.get(event)
+        if not signal:
+            return {}
+
+        results = signal.send(AbstractTraceRecorder, **kwargs)
+        data = {}
+        for reciever, response in results:
+            key = get_object_name(reciever)
+            if key in data:
+                key = "%s.%s" % (key, id(reciever))
+
+            data[key] = response
+
+        return data
 
     def _walk_frame(self, event, frame, tb):
         self.stack, self.current_index = self._debugger.get_stack(frame, tb)

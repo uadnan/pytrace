@@ -28,18 +28,37 @@
 
 import sys
 import threading
-import warnings
 import weakref
+import inspect
 import six
 
-from pytrace.utils.deprecation import RemovedInDjango20Warning
-from django.utils.inspect import func_accepts_kwargs
-from django.utils.six.moves import range
+from six.moves import range
 
 if six.PY2:
     from .weakref_backports import WeakMethod
 else:
     from weakref import WeakMethod
+
+
+def func_accepts_kwargs(func):
+    if six.PY2:
+        # Not all callables are inspectable with getargspec, so we'll
+        # try a couple different ways but in the end fall back on assuming
+        # it is -- we don't want to prevent registration of valid but weird
+        # callables.
+        try:
+            argspec = inspect.getargspec(func)
+        except TypeError:
+            try:
+                argspec = inspect.getargspec(func.__call__)
+            except (TypeError, AttributeError):
+                argspec = None
+        return not argspec or argspec[2] is not None
+
+    return any(
+        p for p in inspect.signature(func).parameters.values()
+        if p.kind == p.VAR_KEYWORD
+    )
 
 
 def _make_id(target):
@@ -152,7 +171,7 @@ class Signal(object):
                 self.receivers.append((lookup_key, receiver))
             self.sender_receivers_cache.clear()
 
-    def disconnect(self, receiver=None, sender=None, weak=None, dispatch_uid=None):
+    def disconnect(self, receiver=None, sender=None, dispatch_uid=None):
         """
         Disconnect receiver from sender for signal.
 
@@ -171,8 +190,6 @@ class Signal(object):
             dispatch_uid
                 the unique identifier of the receiver to disconnect
         """
-        if weak is not None:
-            warnings.warn("Passing `weak` to disconnect has no effect.", RemovedInDjango20Warning, stacklevel=2)
         if dispatch_uid:
             lookup_key = (dispatch_uid, _make_id(sender))
         else:

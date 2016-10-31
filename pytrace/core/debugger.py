@@ -144,7 +144,7 @@ class ManagedDebugger(object):
             self.script_lines = script.splitlines()
             self._sandbox.run(script, input_queue, runner=self._bdb.run)
         except SyntaxError as ex:
-            self.trigger(DebuggerEvent.SyntaxError, ex)
+            self.trigger(DebuggerEvent.SyntaxError, exception=ex)
         except:
             if not self._excep_logged:
                 logger.exception(
